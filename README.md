@@ -7,7 +7,7 @@ la cartella [project](./project) è la copia della cartella [example](./example)
 
 # Scegliere Nomi di Dominio
 
-per prima cosa bisogna scegliere due nomi di dominio, nel nostro caso:
+per prima cosa bisogna scegliere due nomi di dominio (entrambi dovranno puntare al server su cui stiamo installando il proxy), nel nostro caso:
 
 -  spid.blockchainlab.it : riferito al servizio proxy basasto su satosa;
 -  discovery.blockchainlab.it : riferito al servizio discovery e ai contenuti statici. 
