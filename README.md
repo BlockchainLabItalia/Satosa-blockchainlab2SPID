@@ -51,6 +51,8 @@ modificare i seguenti file html:
 
 # Aggiungere SP
 
+> prima di scaricare i metadata bisogna [`creare una nuova connessione su Auth0`](#Auth0). 
+
 - scaricare i metadata del Service Provider che si vuole aggiungere nella cartella project/metadata/sp
 
     ```
