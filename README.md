@@ -5,9 +5,67 @@
 
 la cartella [project](./project) è la copia della cartella [example](./example)
 
+# Preparare Server
+
+- creare un nuovo server ubuntu
+
+- installare i seguenti pacchetti
+ 
+    ```
+    sudo apt-get update
+    ```
+    
+    ```
+    sudo apt-get install -y wget jq
+    ```
+
+- installare Docker e Docker-Compose
+  
+    ```
+    sudo apt-get install \
+    ca-certificates \
+    curl \
+    gnupg \
+    lsb-release
+
+    ```
+    ```
+    sudo mkdir -p /etc/apt/keyrings
+
+    ```
+    ```
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo gpg --dearmor -o /etc/apt/keyrings/docker.gpg
+
+    ```
+    ```
+    echo \
+    "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu \
+    $(lsb_release -cs) stable" | sudo tee /etc/apt/sources.list.d/docker.list > /dev/null
+    ```
+    ```
+    sudo apt-get update
+    ```
+    ```
+    sudo apt-get install docker-ce docker-ce-cli containerd.io docker-compose-plugin
+
+    ```    
+    ```
+    DOCKER_CONFIG=${DOCKER_CONFIG:-$HOME/.docker}
+    ```
+    ```
+    mkdir -p $DOCKER_CONFIG/cli-plugins
+    ```
+    ```
+    curl -SL https://github.com/docker/compose/releases/download/v2.5.0/docker-compose-linux-x86_64 -o $DOCKER_CONFIG/cli-plugins/docker-compose
+
+    ```
+    ```
+    chmod +x $DOCKER_CONFIG/cli-plugins/docker-compose
+    ```
+    
 # Scegliere Nomi di Dominio
 
-per prima cosa bisogna scegliere due nomi di dominio (entrambi dovranno puntare al server su cui stiamo installando il proxy), nel nostro caso:
+ora bisogna scegliere due nomi di dominio e creare i relativi record DNS(entrambi dovranno puntare al server su cui stiamo installando il proxy), nel nostro caso:
 
 -  spid.blockchainlab.it : riferito al servizio proxy basasto su satosa;
 -  discovery.blockchainlab.it : riferito al servizio discovery e ai contenuti statici. 
@@ -25,7 +83,28 @@ Aggiornare i seguenti file con i nomi di dominio scelti e le informazioni person
 > NOTA per il file satosa.conf: <br>
 > il nome della cartella in cui let's encrypt genera i certitificati per i due domini è il nome del primo dominio indicato nel file init-letsencrypt.sh, per entrambi i domini.
 
+# Modificare Dockerfile
+- [satosa-saml2spid](./docker/satosa-saml2spid/Dockerfile)
 
+  commentare l'ultima linea
+  ```
+  #ENTRYPOINT uwsgi --wsgi satosa.wsgi --https 0.0.0.0:10000,/satosa_pki/cert.pem,/satosa_pki/privkey.pem --callable app -b 32648
+  ```
+  e sostituirla con
+  ```
+  ENTRYPOINT uwsgi --wsgi satosa.wsgi --http 0.0.0.0:10000 --callable app -b 32648
+  ```
+  
+- [satosa-statics](./docker/satosa-statics/Dockerfile)
+
+  commentare l'ultima linea
+  ```
+  #ENTRYPOINT uwsgi --uid 1000 --https 0.0.0.0:9999,/satosa_pki/cert.pem,/satosa_pki/privkey.pem --check-static-docroot --check-static $BASEDIR --static-index disco.html
+  ```
+  e sostituirla con
+  ```
+  ENTRYPOINT uwsgi --uid 1000 --http 0.0.0.0:9999 --check-static-docroot --check-static $BASEDIR --static-index disco.html
+  
 # Modificare i templates delle pagine statiche
 
 modificare i seguenti file html:
@@ -65,6 +144,8 @@ modificare i seguenti file html:
 
 - inserire le informazioni necessarie per generare i certificati per il docker spid-certs;
 
+  > nel campo *org-id* assicurarsi che la la partita iva o il codice fiscale siano inseriti rispettivamente secondo il seguente formato "VATIT-" o "CF:IT-".
+
 - aggiungere il docker di nginx
     ```
     satosa-nginx:
@@ -96,36 +177,44 @@ modificare i seguenti file html:
         entrypoint: "/bin/sh -c 'trap exit TERM; while :; do certbot renew; sleep 12h & wait $${!}; done;'"
     ```
 
-## - Eseguire i comandi
-
-````
-apt install jq
-pip install docker-compose
-````
+## Eseguire Satosa
 
 Creare i volumi
-````
+```
 docker volume create --name=satosa-saml2saml_certs
+```
+```
 docker volume create --name=satosa-saml2saml_conf
+```
+```
 docker volume create --name=satosa-saml2saml_statics
+```
+```
 docker volume create --name=satosa-saml2saml_logs
-````
-
-Where the data are
-`docker volume ls`
+```
 
 Copiare i file nei volumi di destinazione
 
-````
+```
 cp project/pki/*pem `docker volume inspect satosa-saml2saml_certs | jq .[0].Mountpoint | sed 's/"//g'`
+```
+```
 cp -R project/* `docker volume inspect satosa-saml2saml_conf | jq .[0].Mountpoint | sed 's/"//g'`
+```
+```
 cp -R project/static/* `docker volume inspect satosa-saml2saml_statics | jq .[0].Mountpoint | sed 's/"//g'`
-````
+```
 
-avviare docker-compose
-````
-docker-compose up
-````
+se è il primo avvio eseguite:
+```
+./init-letsencrypt.sh
+```
+in questo modo verranno creati i certificati per HTTPS.
+
+altrimenti avviare docker-compose
+```
+docker-compose up -d
+```
 
 See [mongo readme](./mongo/README.md) to have some example of demo data.
 
@@ -151,6 +240,11 @@ See [mongo readme](./mongo/README.md) to have some example of demo data.
     **X509 Signing Certificate**:
 
     Ottenerlo dai metadata del frontend.
+    
+    > NOTA:
+    > se stai creando la connessione su Auth0 prima di aver eseguito satosa, puoi utilizzare un certificato qualsiasi (ad esempio quello che trovi nella cartella [pki](./example/pki). 
+    
+    >RICORDA PERO' DI MODIFICARLO CON QUELLO CONTENUTO NEI METADATA DOPO CHE AVRAI ESEGUITO SATOSA!!
 
 # Aggiornare Signing Keys per la connessione appena creata
 Ottenere Acceess Token per l' applicazione 'API Exploreer Application'.
@@ -199,4 +293,5 @@ curl --request GET \
 ````
 
 # Abilitare connessione in un'Applicazione e testarla
-- prima di testare controllare che l' url del sito di origine sia inserito tra i siti autorizzati all' interno dell' Applicazione dentro la quale eè stata abilitata la connessione
+
+prima di testare controllare che l' url del sito di origine sia inserito tra i siti autorizzati all' interno dell' Applicazione dentro la quale è stata abilitata la connessione e ricordarsi di scaricare i metadata del nostro backend sulla pagina dell'ambiente validator.
