@@ -255,7 +255,7 @@ curl --request POST \
   --header 'content-type: application/json' \
   --data '{"client_id":"<client_id>","client_secret":"<client_secreet>","audience":"https://con-cert.eu.auth0.com/api/v2/","grant_type":"client_credentials"}'
 ````
-utilizzabile poi con client come Postman o da command lin econ curl:
+utilizzabile poi con client come Postman o da command line con curl:
 ````
 curl --request GET \
   --url http://path_to_your_api/ \
@@ -295,3 +295,7 @@ curl --request GET \
 # Abilitare connessione in un'Applicazione e testarla
 
 prima di testare controllare che l' url del sito di origine sia inserito tra i siti autorizzati all' interno dell' Applicazione dentro la quale è stata abilitata la connessione e ricordarsi di scaricare i metadata del nostro backend sulla pagina dell'ambiente validator.
+
+# Diventare Fornitore di Servizi SPID
+
+Per essere abilitat come Service Provider bisogna seguire una [procedura tecnica](https://www.spid.gov.it/cos-e-spid/diventa-fornitore-di-servizi/procedura-tecnica/) ed in caso il proxy superi le verifiche effettuate da AgID, una [procedura amministrativa](https://www.spid.gov.it/cos-e-spid/diventa-fornitore-di-servizi/procedura-amministrativa/).
