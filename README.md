@@ -277,8 +277,9 @@ curl --request GET \
     sovrascrive le informazioni della connessione con quelle inserite nel body della richiesta. qui vanno inserite le chiavi.
 
 
-# Creare mapping attributio nella connessione
+# Creare mapping attributi nella connessione Auth0
 
+Authentication > Enterprise > SAML > _nome_connessione_ > Mappings
 ````
 {
   "sn": "urn:oid:2.5.4.4",
