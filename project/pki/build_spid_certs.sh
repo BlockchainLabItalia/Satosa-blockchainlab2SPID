@@ -71,7 +71,7 @@ cat > ${openssl_conf} <<EOF
 oid_section=spid_oids
 [ req ]
 default_bits=3072
-default_md=sha384
+default_md=sha512
 distinguished_name=dn
 encrypt_key=no
 prompt=no
