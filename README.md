@@ -270,7 +270,7 @@ curl --request GET \
 
 - GET https://con-cert.eu.auth0.com/api/v2/connections/_connection_id_
 
-    restituisce tutte le informazioni di quella specifica connessione. [dettagli] (https://auth0.com/docs/api/management/v2/#!/Connections/get_connections_by_id).
+    restituisce tutte le informazioni di quella specifica connessione. [dettagli](https://auth0.com/docs/api/management/v2/#!/Connections/get_connections_by_id).
 
 - PATCH https://con-cert.eu.auth0.com/api/v2/connections/_connection_id_ 
 
